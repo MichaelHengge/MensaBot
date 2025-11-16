@@ -131,13 +131,14 @@ def is_admin(user_id: int) -> bool:
 
 def is_meal_eligible(meal: Dict[str, Any], user_data: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Checks if a meal is safe (no allergens) and if it matches the user's preferences.
+    Checks if a meal is safe (no allergens) and if it matches the user's preferences,
+    including hierarchical matching (e.g., Vegan matches Vegetarian).
     
     Returns:
-        A dictionary with status and reasons.
+        A dictionary with eligibility status and reasons.
     """
     
-    # Initialize status
+    # Initialize eligibility status
     result = {
         'safe': True,
         'matches_pref': False,
@@ -151,7 +152,6 @@ def is_meal_eligible(meal: Dict[str, Any], user_data: Dict[str, Any]) -> Dict[st
     if user_allergies:
         meal_allergen_codes = {a['code'].lower() for a in meal.get('allergens', [])}
         
-        # Check for allergenee conflicts
         conflicts = user_allergies.intersection(meal_allergen_codes)
         
         if conflicts:
@@ -161,27 +161,58 @@ def is_meal_eligible(meal: Dict[str, Any], user_data: Dict[str, Any]) -> Dict[st
                 for c in conflicts
             ]
 
-    # Preference Checks
+    # Preference Check
     user_prefs = set(user_data.get('diet_preferences', []))
+    
+    meal_icons_fulfilled = set()
     meal_icons = {icon['type'].lower() for icon in meal.get('dietary_icons', [])}
     
-    matches = user_prefs.intersection(meal_icons)
+    for icon_type in meal_icons:
+        if icon_type == 'vegan':
+            meal_icons_fulfilled.add('vegan')
+            meal_icons_fulfilled.add('vegetarian') # Vegan satisfies Vegetarian
+        elif icon_type == 'vegetarian':
+            meal_icons_fulfilled.add('vegetarian')
+        # Add other simple icons directly
+        elif icon_type in DIET_PREF_KEYS:
+            meal_icons_fulfilled.add(icon_type)
+        
+    matches = user_prefs.intersection(meal_icons_fulfilled)
     if matches:
         result['matches_pref'] = True
         result['pref_matches'].extend(matches)
         
-    meal_sustainability = " ".join(meal.get('sustainability', [])).lower()
+    meal_sustainability_text = " ".join(meal.get('sustainability', [])).lower()
     
-    if 'low_co2' in user_prefs and ('wesentlich' in meal_sustainability or 'leicht' in meal_sustainability):
-        result['matches_pref'] = True
-        result['pref_matches'].append('Low CO₂ Metric Match')
+    if 'low_co2' in user_prefs:
+        if any(rating in meal_sustainability_text for rating in ['wesentlich', 'leicht']):
+            result['matches_pref'] = True
+            result['pref_matches'].append('low_co2')
+        else:
+            result['pref_violations'].append('Low CO2') # Did not match
+            
+    if 'low_h2o' in user_prefs:
+        if 'unter dem durchschnitt' in meal_sustainability_text:
+            result['matches_pref'] = True
+            result['pref_matches'].append('low_h2o')
+        else:
+            result['pref_violations'].append('Low H2O') # Did not match
 
-    if 'low_h2o' in user_prefs and 'unter dem durchschnitt' in meal_sustainability:
-        result['matches_pref'] = True
-        result['pref_matches'].append('Low H₂O Metric Match')
+    requested_prefs = set(DIET_PREF_KEYS).intersection(user_prefs)
+    
+    unfulfilled_prefs = requested_prefs.difference(set(result['pref_matches']))
+
+    for pref in unfulfilled_prefs:
+        if pref.title() not in result['pref_violations']:
+             result['pref_violations'].append(pref.title())
+
+    result['pref_matches'] = sorted(list(set(result['pref_matches'])))
+    result['pref_violations'] = sorted(list(set(result['pref_violations'])))
         
-    if user_prefs and not result['matches_pref']:
-        result['pref_violations'] = [p.title() for p in user_prefs]
+    if requested_prefs and not result['pref_matches']:
+        result['matches_pref'] = False
+    elif requested_prefs:
+        result['matches_pref'] = True
         
     return result
 
