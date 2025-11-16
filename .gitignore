@@ -1,0 +1,40 @@
+# Python bytecode and cache
+
+**pycache**/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+
+venv/
+env/
+.venv/
+
+# OS generated files
+
+.DS_Store
+Thumbs.db
+
+# IDE / Editor settings
+
+.vscode/
+
+# Environment variables and sensitive files
+
+.env
+
+# Logs
+
+*.log
+logs/
+
+# Temporary / cache directories
+
+cache/
+tmp/
+*.tmp
+
+# Menu and user files created by the scraper/bot
+
+mensa_menu.json
+user_data.json
