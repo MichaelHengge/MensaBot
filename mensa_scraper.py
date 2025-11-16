@@ -241,14 +241,14 @@ class MensaScraper:
             'week_data': week_data
         }
     
-def save_to_json(self, data: Dict[str, Any]) -> None:
-    """Saves scraped data to JSON file."""
-    try:
-        with open(MENU_DATA_FILE, 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-        logger.info(f"Data successfully saved to {MENU_DATA_FILE}")
-    except IOError as e:
-        logger.error(f"Error saving file: {e}")
+    def save_to_json(self, data: Dict[str, Any]) -> None:
+        """Saves scraped data to JSON file."""
+        try:
+            with open(MENU_DATA_FILE, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
+            logger.info(f"Data successfully saved to {MENU_DATA_FILE}")
+        except IOError as e:
+            logger.error(f"Error saving file: {e}")
 
 
 def main():
