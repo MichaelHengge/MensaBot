@@ -36,6 +36,12 @@ Ensure your `requirements.txt` includes: `requests`, `beautifulsoup4`, `python-t
 pip install -r requirements.txt
 ```
 
+### 1.3. Docker Installation
+
+To run the bot using a docker container via compose, you must have Docker Engine and Docker Compose installed on your host machine.
+
+The easiest way to obtain both is by installing Docker Desktop (for Windows, macOS) or following the official installation guides for Docker Engine and Docker Compose (for Linux).
+
 ---
 
 ## 2. Bot Configuration (The `.env` File)
@@ -95,6 +101,24 @@ On startup, the bot will:
 * Automatically run `mensa_scraper.py` to fetch the weekly menu (if missing or outdated).
 * Schedule a fresh menu scrape every Monday–Friday morning at 06:00.
 * Schedule a meal‑alert (and recheck availability) check Monday–Friday at 10:00.
+
+### 4.3. Running the Bot via Docker Compose
+
+Use docker compose to build the image, create the necessary volume, and start the bot service in the background.
+
+```bash
+# 1. Build the image and start the container
+docker compose up --build -d
+
+# 2. Check the logs to ensure successful startup and menu fetch
+docker compose logs -f mensabot
+```
+
+Upon startup, the bot will:
+
+1. Send a startup confirmation message to the ADMIN_ID.
+2. Automatically run the scraper to fetch the rolling 7-day menu (if data is missing or stale).
+3. Schedule the daily menu refresh and reminder jobs.
 
 ---
 

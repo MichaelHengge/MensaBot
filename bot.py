@@ -20,7 +20,7 @@ MENU_DATA_FILE = os.getenv("MENU_DATA_FILE", "mensa_menu.json")
 LOOKUP_FILE = os.getenv("LOOKUP_FILE", "lookup_tables.json")
 
 # Import Scraper
-from mensa_scraper import main as run_scraper 
+from core.scraper import main as run_scraper 
 
 # Enable logging
 logging.basicConfig(
@@ -173,7 +173,6 @@ def is_meal_eligible(meal: Dict[str, Any], user_data: Dict[str, Any]) -> Dict[st
             meal_icons_fulfilled.add('vegetarian') # Vegan satisfies Vegetarian
         elif icon_type == 'vegetarian':
             meal_icons_fulfilled.add('vegetarian')
-        # Add other simple icons directly
         elif icon_type in DIET_PREF_KEYS:
             meal_icons_fulfilled.add(icon_type)
         
@@ -250,7 +249,6 @@ async def menu_stats(update: Update, context):
             for meal in category['meals']:
                 stats['total_meals'] += 1
 
-                # Tally Dietary & Sustainability counts
                 for icon in meal.get('dietary_icons', []):
                     icon_type = icon['type']
                     if icon_type == 'vegan':
@@ -741,8 +739,6 @@ async def format_meal_message(meal: Dict[str, Any], user_status: str, eligibilit
     elif eligibility['safe'] and eligibility['pref_violations']:
         pref_flag = f"\n   - *NOTE:* Does NOT meet your preferences: {', '.join(eligibility['pref_violations'])}"
         prefix_icon = "🟡"
-
-    # ------------------------------------------------------
     
     icons = []
     for icon in meal.get('dietary_icons', []):
@@ -1246,7 +1242,6 @@ async def send_daily_reminders(context):
     if today_menu:
         for category in today_menu['categories']:
             for meal in category['meals']:
-                # Store keywords in a set for fast lookup
                 today_meals[meal['name'].lower()] = True 
     else:
         logger.warning(f"No menu data found for today ({today_date_str}). Skipping reminders.")
@@ -1365,7 +1360,7 @@ def main():
     else:
         logger.info("Menu data is present and current. Skipping startup scrape.")
     
-    # Core Utility Commands
+    # User Commands
     application.add_handler(CommandHandler("help", help_command))
     application.add_handler(CommandHandler("status", show_user_status))
     application.add_handler(CommandHandler("menu", show_today_menu))
@@ -1426,7 +1421,7 @@ def main():
     application.add_handler(notify_handler)
     
     application.add_handler(
-        CallbackQueryHandler(handle_notification_query, pattern=f"^{DELETE_NOTIF_PREFIX}") # Match any callback starting with the prefix
+        CallbackQueryHandler(handle_notification_query, pattern=f"^{DELETE_NOTIF_PREFIX}")
     )
     
     application.add_handler(

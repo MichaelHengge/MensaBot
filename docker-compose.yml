@@ -1,0 +1,18 @@
+services:
+  mensabot:
+    build: .
+    
+    restart: unless-stopped
+    
+    env_file:
+      - .env
+      
+    volumes:
+      - mensabot_data:/usr/src/app/data
+      - ./config:/usr/src/app/config:ro
+      
+    working_dir: /usr/src/app
+
+volumes:
+  mensabot_data:
+    name: mensabot_persistent_data
